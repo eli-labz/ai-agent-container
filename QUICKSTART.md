@@ -1,95 +1,75 @@
-# Quick Start Guide
+# Quick Start
 
-Get Flowcase up and running in 5 minutes!
+This starts the AI Agent Container Control Plane locally. Docker must be reachable, but provider credentials are optional and the current task queue does not call a model.
 
-## Prerequisites
-
-- Docker Desktop installed and running
-- 2GB+ RAM available
-- 10GB+ free disk space
-
-## Installation
-
-### Step 1: Run Installation Script
-
-**Windows:**
-```powershell
-.\install.ps1
-```
-
-**Linux/Mac:**
-```bash
-chmod +x install.sh
-./install.sh
-```
-
-### Step 2: Wait for Services
-
-The script will:
-- Generate secure passwords
-- Create configuration files
-- Start all containers
-- Display access information
-
-**First run takes 2-5 minutes** (downloading images)
-
-### Step 3: Get Credentials
-
-Watch the terminal output for:
-```
-Created default users:
------------------------
-Username: admin
-Password: <random-password>
------------------------
-```
-
-Or view logs:
-```bash
-docker compose logs -f
-```
-
-### Step 4: Access Flowcase
-
-1. Open browser: `http://localhost`
-2. Login with credentials from Step 3
-3. Start creating containers!
-
-## That's It! 🎉
-
-You're now running Flowcase!
-
-## Next Steps
-
-- **Configure Authentik** (optional): See [SETUP.md](SETUP.md#authentik-integration-optional)
-- **Create your first droplet**: Use the web interface
-- **Customize settings**: Explore the admin panel
-- **Read the docs**: Check [SETUP.md](SETUP.md) for advanced configuration
-
-## Common Commands
+## Start
 
 ```bash
-# View logs
-docker compose logs -f
-
-# Stop Flowcase
-docker compose down
-
-# Start Flowcase
-docker compose up -d
-
-# Restart
-docker compose restart
+git clone https://github.com/eli-labz/ai-agent-container.git
+cd ai-agent-container
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python run.py --port 5000
 ```
 
-## Troubleshooting
+Open `http://localhost:5000/agents`. A fresh database creates an `admin` account and prints its generated password to server logs. Change it immediately and do not expose first-run setup to an untrusted network.
 
-**Can't access?**
-- Check containers: `docker compose ps`
-- View logs: `docker compose logs -f`
-- Try `http://localhost` instead of `https://localhost`
+## Define an Agent
 
-**Need help?**
-- See [SETUP.md](SETUP.md#troubleshooting) for detailed troubleshooting
-- Check [README.md](README.md) for more information
+```yaml
+apiVersion: ai-agent-container/v1
+kind: Agent
+metadata:
+  name: research-agent
+  description: Research and analysis worker
+spec:
+  runtime:
+    image: python:3.12-slim
+    command: [python, -c, "import time; time.sleep(10**9)"]
+  workspace:
+    persistent: true
+    path: /workspace
+  resources:
+    cpu: "1"
+    memory: 1Gi
+    pids: 256
+  capabilities:
+    network:
+      enabled: false
+  tools: []
+  approvalPolicy:
+    mode: risk-based
+```
 
+Definitions are validated before storage. Approval mode is metadata only in this release; it does not gate actions.
+
+## API Workflow
+
+Sign in at `/` to establish a session, then reuse the cookie with `curl`:
+
+```bash
+curl -c cookies.txt -b cookies.txt -d 'username=admin&password=YOUR_PASSWORD' \
+  -X POST http://localhost:5000/login
+curl -b cookies.txt http://localhost:5000/api/v1/agents
+curl -b cookies.txt -H 'Content-Type: application/json' \
+  -d '{"definition":"apiVersion: ai-agent-container/v1\nkind: Agent\nmetadata:\n  name: research-agent\nspec:\n  runtime:\n    image: python:3.12-slim\n"}' \
+  http://localhost:5000/api/v1/agents
+```
+
+Use the returned Agent `id` for lifecycle operations:
+
+```bash
+curl -b cookies.txt -X POST http://localhost:5000/api/v1/agents/AGENT_ID/start
+curl -b cookies.txt http://localhost:5000/api/v1/agents/AGENT_ID/runtime
+curl -b cookies.txt http://localhost:5000/api/v1/agents/AGENT_ID/logs
+curl -b cookies.txt -H 'Content-Type: application/json' \
+  -d '{"agent_id":"AGENT_ID","title":"Review files","instructions":"Inspect the workspace"}' \
+  http://localhost:5000/api/v1/tasks
+curl -b cookies.txt -X POST http://localhost:5000/api/v1/agents/AGENT_ID/stop
+```
+
+Tasks are stored as `queued` and appear in Tasks and Events. No worker executes task instructions yet. Runtime images must already exist in Docker; provider credentials, task dispatch, and artifact export are not implemented.
+
+Stop the server with `Ctrl+C`. Stop Agent containers from the console or API before shutting down Docker.

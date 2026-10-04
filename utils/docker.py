@@ -107,21 +107,21 @@ def cleanup_containers(app=None):
 						except Exception as e:
 							print(f"Error restarting container {container.name}: {str(e)}")
 		
-		print(f"Container cleanup complete: {flowcase_containers} flowcase containers found, {orphaned_containers} orphaned containers removed, {restarted_containers} containers restarted")
+		print(f"Legacy desktop container cleanup complete: {flowcase_containers} containers found, {orphaned_containers} orphaned containers removed, {restarted_containers} containers restarted")
 							
 	except Exception as e:
 		print(f"Error in container cleanup: {str(e)}")
 
 def force_pull_required_images():
-	"""Force pull all required images for Flowcase (called during startup)"""
+	"""Force pull legacy desktop images configured for existing installations."""
 	if not docker_client:
 		print("No Docker client available, skipping required image pull")
 		return
 		
 	try:
-		log("INFO", "Starting required image pull for Flowcase...")
+		log("INFO", "Starting configured legacy desktop image pull...")
 		
-		# Define all required images for Flowcase
+		# Keep the existing browser-streaming image available for legacy routes.
 		required_images = [
 			# Guacamole image (always required)
 			{
@@ -171,13 +171,13 @@ def force_pull_required_images():
 			except Exception as e:
 				log("ERROR", f"Error pulling required Docker image {image_name} ({description}): {e}")
 				
-		log("INFO", "Required image pull for Flowcase completed")
+		log("INFO", "Configured legacy desktop image pull completed")
 				
 	except Exception as e:
 		log("ERROR", f"Error in force_pull_required_images: {str(e)}")
 
 def pull_images():
-	"""Pull all required docker images for Flowcase"""
+	"""Pull images configured by the retained desktop-container subsystem."""
 	if not docker_client:
 		print("No Docker client available, skipping image pull")
 		return
@@ -185,7 +185,7 @@ def pull_images():
 	from models.droplet import Droplet
 	
 	try:
-		# Define all required images for Flowcase
+		# Keep the existing browser-streaming image available for legacy routes.
 		required_images = [
 			# Guacamole image (always required)
 			{
@@ -234,7 +234,7 @@ def pull_images():
 			except Exception as e:
 				log("ERROR", f"Error pulling required Docker image {image_name} ({description}): {e}")
 				
-		log("INFO", "Required image pull for Flowcase completed")
+		log("INFO", "Configured legacy desktop image pull completed")
 				
 	except Exception as e:
 		log("ERROR", f"Error in pull_images: {str(e)}")

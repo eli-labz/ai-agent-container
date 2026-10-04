@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" href="/favicon.ico">
-        <title>Flowcase - Dashboard</title>
+        <title>AI Agent Container - Dashboard</title>
 
         <link rel="stylesheet" href="/static/css/base.css">
         <link rel="stylesheet" href="/static/css/dashboard.css">
@@ -41,9 +41,10 @@
     <body>
         <div class="container">
             <nav class="nav">
-                <h1>Flowcase</h1>
+                <h1>AI Agent Container</h1>
                 
                 <div class="nav-links">
+                    <a href="/agents"><i class="fas fa-robot"></i> Agents</a>
                     {% if current_user.has_permission("perm_admin_panel") %}
                     <a href="#" onclick="OpenAdminPanel()"><i class="fas fa-cogs"></i> Admin</a>
                     {% endif %}

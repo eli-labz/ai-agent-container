@@ -34,7 +34,7 @@ nav h1 {
 	font-weight: bold;
 }
 
-/* disable flowcase text if screen is too small */
+/* Keep compact branding visible on narrow screens. */
 @media (max-width: 600px) {
 	nav h1 {
 		display: none;

@@ -119,3 +119,5 @@ volumes:
 
 networks:
   authentik_network:
+  proxy_network:
+    name: proxy_network

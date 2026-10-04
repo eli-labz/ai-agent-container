@@ -1,0 +1,22 @@
+apiVersion: ai-agent-container/v1
+kind: Agent
+metadata:
+  name: document-worker
+  description: Bounded document processing workspace
+spec:
+  runtime:
+    image: python:3.12-slim
+    command: [python, -c, "import time; time.sleep(10**9)"]
+  workspace:
+    persistent: true
+    path: /workspace
+  resources:
+    cpu: "1"
+    memory: 1Gi
+    pids: 256
+  capabilities:
+    network:
+      enabled: false
+  tools: []
+  approvalPolicy:
+    mode: manual

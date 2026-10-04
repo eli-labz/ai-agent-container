@@ -6,6 +6,7 @@ COPY config /flowcase/config
 COPY models /flowcase/models
 COPY nginx /flowcase/nginx
 COPY routes /flowcase/routes
+COPY services /flowcase/services
 COPY static /flowcase/static
 COPY templates /flowcase/templates
 COPY utils /flowcase/utils

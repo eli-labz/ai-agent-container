@@ -9,8 +9,8 @@ services:
     build:
       context: .
       dockerfile: web.Dockerfile
-    image: flowcaseweb/flowcase
-    container_name: flowcase-web
+    image: ghcr.io/eli-labz/ai-agent-container:latest
+    container_name: ai-agent-container-web
     restart: unless-stopped
     volumes:
       - flowcase-data:/flowcase/data
@@ -19,9 +19,20 @@ services:
     environment:
       - FLASK_APP=run.py
       - FLASK_DEBUG=0
+      - AI_AGENT_CONTAINER_ENV=production
+      - AI_AGENT_CONTAINER_HOST=${AI_AGENT_CONTAINER_HOST:-0.0.0.0}
+      - AI_AGENT_CONTAINER_PORT=5000
+      - AI_AGENT_CONTAINER_DATABASE_URL=${AI_AGENT_CONTAINER_DATABASE_URL:-}
+      - SECRET_KEY=${SECRET_KEY:-}
+      - DOCKER_HOST=${DOCKER_HOST:-unix:///var/run/docker.sock}
     networks:
       - default_network
     command: python run.py # --traefik-authentik # --registry-lock https://my-private-locked-registry.example
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/v1/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   nginx:
     image: nginx:1.28-alpine
@@ -30,15 +41,16 @@ services:
     volumes:
       - flowcase-nginx-data:/etc/nginx/conf.d
     depends_on:
-      - web
+      web:
+        condition: service_healthy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.flowcase.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.flowcase.entrypoints=websecure
-      - traefik.http.routers.flowcase.tls.certresolver=acme-resolver
-      - traefik.http.services.flowcase.loadbalancer.server.port=80
+      - traefik.http.routers.ai-agent-container.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.ai-agent-container.entrypoints=websecure
+      - traefik.http.routers.ai-agent-container.tls.certresolver=acme-resolver
+      - traefik.http.services.ai-agent-container.loadbalancer.server.port=80
       # enable middleware to add authentication by authentik
-      # - traefik.http.routers.flowcase.middlewares=authentik@file
+      # - traefik.http.routers.ai-agent-container.middlewares=authentik@file
       - traefik.docker.network=proxy_network
     networks:
       - default_network
@@ -47,6 +59,8 @@ services:
 networks:
   default_network:
     driver: bridge
+  proxy_network:
+    name: proxy_network
 
 volumes:
   flowcase-data:

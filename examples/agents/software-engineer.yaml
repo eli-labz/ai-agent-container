@@ -1,0 +1,22 @@
+apiVersion: ai-agent-container/v1
+kind: Agent
+metadata:
+  name: software-engineer
+  description: Isolated software development workspace
+spec:
+  runtime:
+    image: python:3.12-slim
+    command: [python, -c, "import time; time.sleep(10**9)"]
+  workspace:
+    persistent: true
+    path: /workspace
+  resources:
+    cpu: "2"
+    memory: 2Gi
+    pids: 512
+  capabilities:
+    network:
+      enabled: false
+  tools: []
+  approvalPolicy:
+    mode: manual

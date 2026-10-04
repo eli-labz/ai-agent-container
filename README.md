@@ -1,297 +1,113 @@
-# <div align="center">🌊 **Flowcase**</div>
+# AI Agent Container
 
-<div align="center">
+AI Agent Container is an open-source, container-native control plane for running AI agents inside isolated, observable workspaces with explicit runtime constraints.
 
-![Flowcase](https://img.shields.io/badge/Status-Development-yellow)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Docker](https://img.shields.io/badge/Docker-Required-blue)
+Each Agent Definition describes a runtime image, a bounded `/workspace`, resource limits, network access, and approval metadata. Operators can create an Agent, launch and control its container, queue Tasks, inspect Events, and read runtime logs through the web console or `/api/v1`.
 
-**A cutting-edge open-source container streaming platform**
+> **Project status:** early development. The Agent API and container lifecycle path are implemented, but queued tasks do not yet have a bundled execution worker. Provider credentials, approvals, artifacts, and policy enforcement are not complete. Do not treat this release as production-ready.
 
-</div>
+## Current Capabilities
 
-> [!CAUTION]
-> This project is still in development and is not yet ready for production use. We do not currently support upgrading from older versions. Please use with caution.
-
-## What is Flowcase?
-
-**Flowcase** is a free and completely open-source alternative to Kasm Workspaces, enabling secure container streaming for your applications. Stream desktop applications, development environments, and more through your web browser using Docker containers.
-
-## Features
-
-<div align="center">
-
-| Open-Source | Secure Streaming | User-Friendly | Customizable | Multi-Platform |
-|:-------------:|:------------------:|:----------------:|:--------------:|:--------------:|
-| Completely free and community-driven | Stream applications securely using Docker | Easy to deploy and manage | Supports customization for various use cases | Supports Windows, Linux, and macOS |
-
-</div>
-
-## Quick Start
-
-### Option 1: Automated Installation (Recommended)
-
-**Windows (PowerShell):**
-```powershell
-.\install.ps1
-```
-
-**Linux/Mac:**
-```bash
-chmod +x install.sh
-./install.sh
-```
-
-The installation script will:
-- ✅ Check prerequisites
-- ✅ Generate secure passwords
-- ✅ Create configuration files
-- ✅ Start all services
-- ✅ Display access information
-
-### Option 2: Manual Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/flowcase/flowcase.git
-   cd flowcase
-   ```
-
-2. **Create `.env` file:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-3. **Start Flowcase:**
-   ```bash
-   docker compose up -d
-   ```
-
-4. **View logs for credentials:**
-   ```bash
-   docker compose logs -f
-   ```
-
-5. **Access Flowcase:**
-   - Open `http://localhost` or `https://localhost`
-   - Use the default admin credentials shown in the logs
-
-## Prerequisites
-
-Before installing Flowcase, ensure you have:
-
-- **Docker** (version 20.10 or later)
-  - [Download Docker Desktop](https://www.docker.com/get-started)
-  - Verify: `docker --version`
-
-- **Docker Compose** (version 2.0 or later)
-  - Usually included with Docker Desktop
-  - Verify: `docker compose version`
-
-- **System Requirements:**
-  - At least 2GB RAM
-  - 10GB free disk space
-  - Network access for downloading images
-
-- **Permissions:**
-  - Linux/Mac: User in `docker` group or `sudo` access
-  - Windows: Docker Desktop running with WSL2
-
-## Documentation
-
-- **[SETUP.md](SETUP.md)** - Comprehensive setup guide with detailed instructions
-  - Configuration options
-  - Authentik integration
-  - Troubleshooting
-  - Production deployment
-
-- **[SECURITY.md](SECURITY.md)** - Security information and reporting
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file with the following variables:
-
-| Variable | Description | Example | Required |
-|----------|-------------|---------|----------|
-| `DOMAIN` | Your domain name | `localhost` or `flowcase.example.com` | Yes |
-| `ADMIN_EMAIL` | Email for Let's Encrypt notifications | `admin@example.com` | Yes |
-| `CA_SERVER` | ACME certificate authority | Staging: `https://acme-staging-v02.api.letsencrypt.org/directory`<br>Production: `https://acme-v02.api.letsencrypt.org/directory` | Yes |
-| `PG_PASS` | PostgreSQL database password | Secure random string | Yes |
-| `AUTHENTIK_SECRET_KEY` | Authentik secret key | Secure random string (min 32 chars) | Yes |
-
-**Generate secure values:**
-```bash
-# Generate PostgreSQL password
-openssl rand -base64 24
-
-# Generate Authentik secret key
-openssl rand -base64 32
-```
-
-### Local Development
-
-For local development, use these settings:
-
-```env
-DOMAIN=localhost
-ADMIN_EMAIL=admin@example.com
-CA_SERVER=https://acme-staging-v02.api.letsencrypt.org/directory
-PG_PASS=<generate-secure-password>
-AUTHENTIK_SECRET_KEY=<generate-secure-key>
-```
-
-### Production
-
-For production deployment:
-
-```env
-DOMAIN=flowcase.yourdomain.com
-ADMIN_EMAIL=admin@yourdomain.com
-CA_SERVER=https://acme-v02.api.letsencrypt.org/directory
-PG_PASS=<strong-random-password-32-chars>
-AUTHENTIK_SECRET_KEY=<strong-random-key-50-chars>
-```
-
-## Accessing Flowcase
-
-### Default Access (Without Authentik)
-
-1. Navigate to `http://localhost` or `https://localhost`
-2. Use the default credentials displayed in the terminal logs:
-   - Username: `admin`
-   - Password: `<random-generated-password>`
-
-### With Authentik (Optional - Requires Setup)
-
-Authentik integration is **disabled by default**. To enable it:
-
-1. **Configure Authentik** (see [SETUP.md](SETUP.md#authentik-integration-optional) for detailed steps):
-   - Access Authentik Admin: `https://authentik.localhost`
-   - Create a Proxy Provider
-   - Create an Application
-   - Configure the Outpost
-
-2. **Enable Authentik in docker-compose.yml**:
-   - Uncomment the middleware line (line 41): `- traefik.http.routers.flowcase.middlewares=authentik@file`
-   - Uncomment the flag (line 24): `--traefik-authentik`
-   - Restart: `docker compose restart web nginx traefik`
-
-3. **Access Flowcase**: `https://localhost` (will redirect to Authentik for login)
-
-> [!NOTE]
-> Authentik is disabled by default for easier initial setup. Follow the complete setup guide in [SETUP.md](SETUP.md#authentik-integration-optional) to enable it.
-
-## Common Commands
-
-```bash
-# Start Flowcase
-docker compose up -d
-
-# View logs
-docker compose logs -f
-
-# View logs for specific service
-docker compose logs -f web
-
-# Stop Flowcase
-docker compose down
-
-# Restart services
-docker compose restart
-
-# Check service status
-docker compose ps
-```
+- Authenticated Agent console at `/agents` alongside the retained legacy desktop-container dashboard at `/dashboard`.
+- Versioned YAML/JSON Agent Definitions with validation for names, images, non-root user IDs, resource bounds, workspaces, network access, and approval modes.
+- Persistent Agent, Task, and Event metadata in the existing SQLAlchemy database.
+- Docker runtime create, start, stop, restart, pause, resume, inspect, and logs operations.
+- Runtime defaults: non-root UID, dropped Linux capabilities, `no-new-privileges`, read-only root filesystem, isolated network by default, PID/CPU/memory limits, and an application-managed workspace volume.
+- Owner-scoped API records and structured JSON errors.
+- Optional Traefik and Authentik integration retained from the existing deployment.
 
 ## Architecture
 
-Flowcase consists of the following components:
+The Flask application is the Control Plane. It owns the web console, authenticated API, SQLite metadata by default, and a Docker SDK runtime adapter. Agent containers do not receive the Docker socket. The legacy desktop-container routes remain available for existing deployments; they are not the Agent execution worker. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
-- **Flowcase Web**: Main application server (Flask)
-- **Nginx**: Reverse proxy for Flowcase
-- **Traefik**: Reverse proxy and load balancer with automatic HTTPS
-- **Authentik**: Identity provider (optional, for authentication)
-- **PostgreSQL**: Database for Authentik
-- **Redis**: Cache for Authentik
+## Security Model
 
-## Troubleshooting
+Agent containers run with a non-root numeric UID, all Linux capabilities dropped, `no-new-privileges`, a read-only root filesystem, bounded CPU/memory/PIDs, and an application-managed workspace volume. Network access defaults to disabled; enabling bridge networking permits general Docker-network egress and is not an outbound allowlist. Runtime images must support the configured UID and a writable `/workspace` mount.
 
-### Container Won't Start
+The Control Plane requires Docker daemon access to manage containers. A mounted Docker socket grants powerful host control to the Control Plane and must never be mounted into Agent containers. Limit access to the web application to trusted operators. The current authorization model scopes records to the signed-in user; administrator/operator/viewer roles and approval enforcement are not implemented yet.
 
-```bash
-# Check logs
-docker compose logs
+## Prerequisites
 
-# Check service status
-docker compose ps
-```
+- Python 3.11 or newer and the packages in `requirements.txt`.
+- Docker Engine accessible to the user running the Control Plane.
+- A runtime image already available in the Docker daemon. Image pulling and provider credentials are not managed by the Agent API yet.
 
-### Can't Access Application
-
-- Ensure containers are running: `docker compose ps`
-- Check nginx logs: `docker compose logs nginx`
-- Try `http://localhost` instead of `https://localhost`
-
-### Certificate Warnings
-
-For localhost development, certificate warnings are expected. For production:
-- Use a proper domain name
-- Update `DOMAIN` in `.env`
-- Ensure DNS points to your server
-
-### Reset Everything
-
-⚠️ **Warning**: This will delete all data!
+## Quick Start
 
 ```bash
-docker compose down -v
-docker compose up -d
+git clone https://github.com/eli-labz/ai-agent-container.git
+cd ai-agent-container
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python run.py --port 5000
 ```
 
-For more troubleshooting help, see [SETUP.md](SETUP.md#troubleshooting).
+Open `http://localhost:5000/agents`. On a fresh database, the retained bootstrap creates an `admin` account and prints its generated password to startup logs. Change it immediately. The Control Plane boots without model-provider keys.
 
-## Contributing
+For Docker Compose and proxy options, see [INSTALL.md](INSTALL.md) and [SETUP.md](SETUP.md).
 
-Contributions are welcome! Please feel free to:
+## Example Agent
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+```yaml
+apiVersion: ai-agent-container/v1
+kind: Agent
+metadata:
+  name: research-agent
+  description: Research and analysis worker
+spec:
+  runtime:
+    image: python:3.12-slim
+    command: [python, -c, "import time; time.sleep(10**9)"]
+  workspace:
+    persistent: true
+    path: /workspace
+  resources:
+    cpu: "1"
+    memory: 1Gi
+    pids: 256
+  capabilities:
+    network:
+      enabled: false
+  tools: []
+  approvalPolicy:
+    mode: risk-based
+```
 
-Please read our contributing guidelines and code of conduct before submitting.
+More starter definitions are in [examples/agents](examples/agents).
 
-## Security
+## API
 
-- **Security Issues**: Please report security vulnerabilities to the maintainers privately (see [SECURITY.md](SECURITY.md))
-- **Updates**: Keep your installation updated with the latest releases
-- **Credentials**: Always use strong, randomly generated passwords
-- **Production**: Follow the production deployment checklist in [SETUP.md](SETUP.md#production-deployment)
+The API uses the existing signed-in web session. Health and readiness are public; Agent and Task records are owner-scoped.
 
-## License
+```bash
+curl -b cookies.txt http://localhost:5000/api/v1/agents
+curl -b cookies.txt -H 'Content-Type: application/json' \
+  -d '{"definition":"apiVersion: ai-agent-container/v1\nkind: Agent\nmetadata:\n  name: example\nspec:\n  runtime:\n    image: python:3.12-slim\n"}' \
+  http://localhost:5000/api/v1/agents
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+See [QUICKSTART.md](QUICKSTART.md) for login and lifecycle requests. API endpoints return structured JSON errors.
 
-## Support
+## Development and Tests
 
-- **Documentation**: Check [SETUP.md](SETUP.md) for detailed guides
-- **Issues**: Open an issue on [GitHub](https://github.com/flowcase/flowcase/issues)
-- **Discussions**: Join discussions on [GitHub Discussions](https://github.com/flowcase/flowcase/discussions)
+```bash
+python -m unittest discover -s tests -v
+python -m compileall -q .
+docker compose config
+```
+
+Tests use an in-memory SQLite database and mocked Docker objects; they do not require Docker or paid model-provider credentials. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Roadmap
 
-- [ ] Production-ready release
-- [ ] Upgrade/migration support
-- [ ] Additional authentication providers
-- [ ] Enhanced container management
-- [ ] Performance optimizations
-- [ ] Additional documentation
+- Add a durable task worker and a documented Agent task protocol.
+- Implement Approval, Artifact, Run, Provider, Credential, Tool, and Policy services with authorization and audit coverage.
+- Add migrations and production database configuration for Agent metadata.
+- Add network policy controls and image provenance enforcement.
+- Replace legacy desktop-container UI and identifiers only after a supported migration path exists.
 
----
+## License and Attribution
 
-<div align="center">
-Made with ❤️ by the Flowcase Team
-</div>
+Distributed under the MIT License; see [LICENSE](LICENSE). The existing license attribution is preserved. This repository is maintained at [eli-labz/ai-agent-container](https://github.com/eli-labz/ai-agent-container). Intentional compatibility references are catalogued in [MIGRATIONS.md](MIGRATIONS.md).

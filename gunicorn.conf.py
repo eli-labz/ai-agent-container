@@ -4,7 +4,7 @@ import threading
 import time
 from utils.docker import pull_images
 
-bind = "0.0.0.0:5000"
+bind = f"{os.environ.get('AI_AGENT_CONTAINER_HOST', '0.0.0.0')}:{os.environ.get('AI_AGENT_CONTAINER_PORT', '5000')}"
 
 workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = "sync"
@@ -20,7 +20,7 @@ accesslog = "-"
 errorlog = "-"
 loglevel = "info"
 
-proc_name = "flowcase"
+proc_name = "ai-agent-container"
 
 preload_app = True
 

@@ -1,78 +1,51 @@
-# Installation Guide
+# Installation
 
-This is a quick reference guide. For detailed instructions, see [SETUP.md](SETUP.md).
+## Requirements
 
-## Quick Installation
+- Python 3.11+ for a local install, or Docker Compose v2 for a containerized deployment.
+- A reachable Docker Engine for Agent Runtime lifecycle operations.
+- Runtime images preloaded into that Docker Engine.
 
-### Automated (Recommended)
+The Control Plane does not require AI provider credentials to boot.
 
-**Windows:**
-```powershell
-.\install.ps1
+## Local Install
+
+```bash
+git clone https://github.com/eli-labz/ai-agent-container.git
+cd ai-agent-container
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python run.py --port 5000
 ```
 
-**Linux/Mac:**
+The default metadata database is SQLite under `data/`. Existing installations keep using the historic `data/flowcase.db` path so an upgrade does not silently strand local records. Set `AI_AGENT_CONTAINER_DATABASE_URL` to select another SQLAlchemy-supported database URL.
+
+## Docker Compose
+
+Review the Docker socket mount in `docker-compose.yml` before starting. The web service needs access to the host Docker daemon to create runtimes. This grants substantial host control to the Control Plane; never mount the socket into an Agent container or expose this service to untrusted users.
+
 ```bash
-chmod +x install.sh
-./install.sh
-```
-
-### Manual
-
-1. **Create `.env` file:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your values
-   ```
-
-2. **Start services:**
-   ```bash
-   docker compose up -d
-   ```
-
-3. **Get credentials:**
-   ```bash
-   docker compose logs -f
-   # Look for "Created default users"
-   ```
-
-4. **Access:**
-   - Open `http://localhost`
-   - Login with credentials from logs
-
-## What Gets Installed
-
-- Flowcase web application
-- Nginx reverse proxy
-- Traefik with automatic HTTPS
-- Authentik (optional authentication)
-- PostgreSQL database
-- Redis cache
-
-## Next Steps
-
-- Read [SETUP.md](SETUP.md) for detailed configuration
-- Configure Authentik (optional) - see SETUP.md
-- Create your first container/droplet
-- Customize settings
-
-## Troubleshooting
-
-See [SETUP.md](SETUP.md#troubleshooting) for detailed troubleshooting.
-
-Quick fixes:
-```bash
-# Check status
+cp .env.example .env
+docker compose up -d --build
 docker compose ps
-
-# View logs
-docker compose logs -f
-
-# Restart
-docker compose restart
-
-# Reset (⚠️ deletes data)
-docker compose down -v
-docker compose up -d
+docker compose logs -f web
 ```
 
+The default Compose file includes the existing Traefik and Authentik configuration. For local development, use `docker compose -f docker-compose.dev.yml up --build` and inspect the published port with `docker compose ps`.
+
+Validate before deployment:
+
+```bash
+docker compose config
+docker compose -f docker-compose.dev.yml config
+docker compose -f docker-compose-traefik.yml config
+docker compose -f docker-compose-authentik.yml config
+```
+
+`install.sh` and `install.ps1` are retained for the existing Compose deployment. Review generated settings and the socket mount before using them. Traefik and Authentik remain optional integrations; third-party service names are unchanged.
+
+## Data and Upgrade Notes
+
+Back up `data/`, `.env`, and Docker volumes before upgrades. The legacy desktop-container subsystem and its database remain available for compatibility. Agent metadata is added with SQLAlchemy `create_all`; existing tables are not migrated automatically. Production deployments need explicit schema migrations before relying on upgrades.

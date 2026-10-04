@@ -11,7 +11,6 @@ from models.registry import Registry
 from models.log import Log
 from utils.permissions import Permissions
 import utils.docker
-import subprocess
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -57,7 +56,7 @@ def api_admin_system():
 			"os": f"{platform.system()} {platform.release()}"
 		},
 		"version": {
-			"flowcase": __version__,
+			"ai_agent_container": __version__,
 			"python": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
 			"docker": utils.docker.get_docker_version(),
 			"nginx": nginx_version,
@@ -591,11 +590,11 @@ def api_admin_registry():
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	import os
-	registry_lock = os.environ.get('FLOWCASE_REGISTRY_LOCK')
+	registry_lock = os.environ.get('AI_AGENT_CONTAINER_REGISTRY_LOCK', os.environ.get('FLOWCASE_REGISTRY_LOCK'))
 
 	response = {
 		"success": True,
-		"flowcase_version": __version__,
+		"ai_agent_container_version": __version__,
 		"registry": [],
 		"registry_locked": bool(registry_lock)
 	}
@@ -649,7 +648,7 @@ def api_admin_registry():
 @login_required
 def api_admin_edit_registry():
 	import os
-	registry_lock = os.environ.get('FLOWCASE_REGISTRY_LOCK')
+	registry_lock = os.environ.get('AI_AGENT_CONTAINER_REGISTRY_LOCK', os.environ.get('FLOWCASE_REGISTRY_LOCK'))
 	
 	# Block all registry editing when locked
 	if registry_lock:

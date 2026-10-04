@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Agents | AI Agent Container</title>
+	<link rel="stylesheet" href="/static/css/agent_console.css">
+</head>
+<body>
+	<header class="topbar">
+		<a class="brand" href="/dashboard">AI Agent Container</a>
+		<nav aria-label="Main navigation">
+			<a href="/dashboard">Dashboard</a>
+			<a class="selected" href="/agents">Agents</a>
+			<a href="#tasks">Tasks</a>
+			<a href="#events">Events</a>
+		</nav>
+		<div class="user-menu">{{ current_user.username }} <a href="/logout">Sign out</a></div>
+	</header>
+	<main>
+		<section class="page-heading">
+			<div><p class="eyebrow">CONTROL PLANE</p><h1>Agents</h1><p class="subtitle">Manage isolated runtimes and their task queues.</p></div>
+			<button id="refresh-button" class="button secondary" type="button">Refresh</button>
+		</section>
+		<p id="notice" class="notice" role="status" hidden></p>
+		<section class="workspace-layout">
+			<div class="primary-column">
+				<section class="panel">
+					<div class="section-heading"><h2>Your agents</h2><span id="agent-count" class="count">0</span></div>
+					<div id="agent-list" class="agent-list" aria-live="polite"></div>
+				</section>
+				<section class="panel" id="tasks">
+					<div class="section-heading"><h2>Recent tasks</h2></div>
+					<div id="task-list" class="table-list"></div>
+				</section>
+				<section class="panel" id="events">
+					<div class="section-heading"><h2>Recent events</h2></div>
+					<div id="event-list" class="table-list"></div>
+				</section>
+			</div>
+			<aside class="secondary-column">
+				<section class="panel form-panel">
+					<h2>Define an agent</h2>
+					<label for="definition">Agent definition (YAML)</label>
+					<textarea id="definition" spellcheck="false">apiVersion: ai-agent-container/v1
+kind: Agent
+metadata:
+  name: research-agent
+  description: Research and analysis worker
+spec:
+  runtime:
+    image: python:3.12-slim
+		command: [python, -c, "import time; time.sleep(10**9)"]
+  model:
+    provider: openai
+    model: ${AI_AGENT_MODEL}
+    credential: openai-default
+  workspace:
+    persistent: true
+    path: /workspace
+  resources:
+    cpu: "1"
+    memory: 1Gi
+    pids: 256
+  capabilities:
+    network:
+      enabled: false
+  tools: []
+  approvalPolicy:
+    mode: risk-based</textarea>
+					<button id="create-agent" class="button primary" type="button">Create agent</button>
+				</section>
+				<section class="panel">
+					<h2>Task queue</h2>
+					<label for="task-agent">Agent</label>
+					<select id="task-agent"></select>
+					<label for="task-title">Title</label>
+					<input id="task-title" maxlength="200" placeholder="Summarize a document">
+					<label for="task-instructions">Instructions</label>
+					<textarea id="task-instructions" class="task-input" placeholder="Describe the work to perform"></textarea>
+					<button id="submit-task" class="button primary" type="button">Queue task</button>
+					<p class="hint">Tasks are persisted in the queue. No task worker is bundled yet.</p>
+				</section>
+			</aside>
+		</section>
+	</main>
+	<dialog id="logs-dialog"><div class="dialog-heading"><h2>Runtime logs</h2><button id="close-logs" class="button secondary" type="button">Close</button></div><pre id="logs-content"></pre></dialog>
+	<script src="/static/js/agent_console.js" defer></script>
+</body>
+</html>

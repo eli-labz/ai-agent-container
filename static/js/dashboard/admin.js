@@ -246,14 +246,14 @@ function AdminChangeTab(tab, element = null)
 				});
 			});
 
-			flowcase_version = json["flowcase_version"];
+			ai_agent_container_version = json["ai_agent_container_version"];
 
 			//set droplet registry name
 			droplets.forEach(droplet => {
 				droplet.registry_name = json["registry"].find(registry => registry.droplets.find(d => d.id == droplet.id)).info.name;
 
-				//if tag of the flowcase version is found, set the intial tag to that, otherwise set to the first tag
-				droplet.tagdefaultindex = droplet.container_docker_tags.findIndex(tag => tag == flowcase_version);
+				// Prefer the current platform version when the registry provides it.
+				droplet.tagdefaultindex = droplet.container_docker_tags.findIndex(tag => tag == ai_agent_container_version);
 				if (droplet.tagdefaultindex == -1) {
 					droplet.tagdefaultindex = 0;
 				}
@@ -366,8 +366,8 @@ function AdminChangeTab(tab, element = null)
 				<h3>Versions</h3>
 
 				<div class="admin-modal-card">
-					<p>Flowcase</p>
-					<textarea readonly disabled style="resize: none;">${json["version"]["flowcase"]}</textarea>
+					<p>AI Agent Container</p>
+					<textarea readonly disabled style="resize: none;">${json["version"]["ai_agent_container"]}</textarea>
 				</div>
 
 				<div class="admin-modal-card">

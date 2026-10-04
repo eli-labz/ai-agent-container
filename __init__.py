@@ -30,14 +30,18 @@ def create_app(config=None):
 	from routes.auth import auth_bp
 	from routes.admin import admin_bp
 	from routes.droplet import droplet_bp
+	from routes.v1 import api_v1_bp
 	
 	app.register_blueprint(auth_bp)
 	app.register_blueprint(admin_bp, url_prefix='/api/admin')
 	app.register_blueprint(droplet_bp)
+	app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
 	
 	@app.errorhandler(404)
 	def page_not_found(e):
-		from flask import render_template
+		from flask import jsonify, render_template, request
+		if request.path.startswith('/api/'):
+			return jsonify({"error": {"code": "NOT_FOUND", "message": "The requested API resource does not exist."}}), 404
 		return render_template('404.html'), 404
 	
 	return app

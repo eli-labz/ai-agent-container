@@ -2,20 +2,20 @@ import os
 import sys
 import subprocess
 import argparse
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Parse command line arguments first, before any imports that might fail
 def parse_args():
-    parser = argparse.ArgumentParser(description='Run FlowCase application')
-    parser.add_argument('--port', type=int, help='Port to run the application on')
-    parser.add_argument('--ext-idp-user', help='Simulate external IDP provider with specified username')
-    parser.add_argument('--traefik-authentik', action='store_true',
-                       help='Enable Traefik + Authentik integration mode (reads username from X-Authentik-Username header)')
-    parser.add_argument('--registry-lock', required=False,
-                       help='Name of a fixed registry to lock registry edit in the frontend')
-    
-    # Add any other arguments that might be needed
-    
-    return parser.parse_known_args()
+	parser = argparse.ArgumentParser(description='Run the AI Agent Container Control Plane')
+	parser.add_argument('--port', type=int, default=int(os.environ.get('AI_AGENT_CONTAINER_PORT', '5000')), help='Port to run the application on')
+	parser.add_argument('--ext-idp-user', help='Simulate external IDP provider with specified username')
+	parser.add_argument('--traefik-authentik', action='store_true',
+					   help='Enable Traefik + Authentik integration mode (reads username from X-Authentik-Username header)')
+	parser.add_argument('--registry-lock', required=False,
+					   help='Name of a fixed registry to lock registry edit in the frontend')
+	return parser.parse_known_args()
 
 # Get command line arguments early
 if __name__ == '__main__':
@@ -45,7 +45,8 @@ if __name__ == '__main__':
 	
 	# Add parsed arguments to gunicorn command
 	if args.port:
-		gunicorn_args.extend(['--bind', f'0.0.0.0:{args.port}'])
+		bind_host = os.environ.get('AI_AGENT_CONTAINER_HOST', '0.0.0.0')
+		gunicorn_args.extend(['--bind', f'{bind_host}:{args.port}'])
 	
 	# Pass authentication configuration as environment variables
 	env = os.environ.copy()
@@ -57,18 +58,18 @@ if __name__ == '__main__':
 	
 	# Handle Traefik + Authentik mode
 	if args.traefik_authentik:
-		env['FLOWCASE_TRAEFIK_AUTHENTIK'] = '1'
+		env['AI_AGENT_CONTAINER_AUTHENTIK'] = '1'
 		print("Traefik + Authentik integration enabled")
 		print("Application will read username from X-Authentik-Username header")
 	# Handle external IDP simulation mode (only if Traefik + Authentik is not enabled)
 	elif args.ext_idp_user:
-		env['FLOWCASE_EXT_USER'] = args.ext_idp_user
+		env['AI_AGENT_CONTAINER_EXT_USER'] = args.ext_idp_user
 		print("External identity provider simulation enabled")
 		print(f"Setting external user: {args.ext_idp_user}")
 	
 	# Handle registry lock configuration
 	if args.registry_lock:
-		env['FLOWCASE_REGISTRY_LOCK'] = args.registry_lock
+		env['AI_AGENT_CONTAINER_REGISTRY_LOCK'] = args.registry_lock
 		print(f"Registry lock enabled for: {args.registry_lock}")
 	
 	# Add any unknown arguments to gunicorn command
